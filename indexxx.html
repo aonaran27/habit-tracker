@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HabitFlow — Track Your Habits</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+
+    :root{
+      --bg:      #0f0f0f;
+      --surface: #161616;
+      --card:    rgba(255,255,255,0.04);
+      --border:  rgba(255,255,255,0.08);
+      --text:    #ffffff;
+      --muted:   #666;
+      --accent:  #00d4aa;
+      --accent2: #7c3aed;
+      --accent3: #f59e0b;
+      --red:     #ef4444;
+      --grad:    linear-gradient(135deg,#00d4aa,#7c3aed);
+    }
+
+    html{scroll-behavior:smooth;}
+
+    body{
+      font-family:'Inter',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding-bottom:60px;
+    }
+
+    /* ======== NAVBAR ======== */
+    nav{
+      position:sticky;top:0;z-index:99;
+      padding:0 28px;height:64px;
+      display:flex;align-items:center;justify-content:space-between;
+      background:rgba(15,15,15,0.9);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+    }
+
+    .nav-logo{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;font-weight:800;
+      background:var(--grad);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    }
+
+    .nav-date{
+      font-size:13px;color:var(--muted);font-weight:500;
+    }
+
+    /* ======== WRAPPER ======== */
+    .wrapper{max-width:680px;margin:0 auto;padding:0 20px;}
+
+    /* ======== HERO STATS ======== */
+    .hero{
+      padding:36px 0 28px;
+      text-align:center;
+    }
+
+    .hero h1{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:clamp(26px,6vw,40px);
+      font-weight:800;
+      letter-spacing:-1px;
+      margin-bottom:8px;
+    }
+
+    .hero p{
+      font-size:14px;color:var(--muted);margin-bottom:28px;
+    }
+
+    .stats-row{
+      display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+      margin-bottom:32px;
+    }
+
+    .stat-pill{
+      display:flex;align-items:center;gap:10px;
+      padding:12px 22px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:100px;
+      font-size:13px;font-weight:600;
+    }
+
+    .stat-pill .val{
+      font-size:20px;font-weight:800;
+      font-family:'Space Grotesk',sans-serif;
+      background:var(--grad);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    }
+
+    .stat-pill .lbl{color:var(--muted);font-size:12px;}
+
+    /* ======== ADD HABIT FORM ======== */
+    .add-section{margin-bottom:32px;}
+
+    .add-box{
+      display:flex;gap:10px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px 16px;
+      transition:border-color 0.2s;
+    }
+
+    .add-box:focus-within{border-color:rgba(0,212,170,0.4);}
+
+    .emoji-pick{
+      font-size:22px;cursor:pointer;
+      background:none;border:none;
+      padding:0 4px;
+      border-radius:8px;
+      transition:background 0.2s;
+    }
+
+    .emoji-pick:hover{background:rgba(255,255,255,0.07);}
+
+    .add-input{
+      flex:1;background:none;border:none;
+      color:white;font-size:15px;
+      font-family:'Inter',sans-serif;
+      outline:none;
+    }
+
+    .add-input::placeholder{color:var(--muted);}
+
+    .color-picks{
+      display:flex;gap:6px;align-items:center;
+    }
+
+    .color-dot{
+      width:20px;height:20px;border-radius:50%;
+      cursor:pointer;border:2px solid transparent;
+      transition:transform 0.15s,border-color 0.15s;
+      flex-shrink:0;
+    }
+
+    .color-dot.chosen{
+      border-color:white;transform:scale(1.2);
+    }
+
+    .add-btn{
+      width:38px;height:38px;border-radius:12px;
+      background:var(--grad);border:none;
+      color:white;font-size:20px;
+      cursor:pointer;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      transition:transform 0.15s,box-shadow 0.15s;
+      box-shadow:0 4px 16px rgba(0,212,170,0.25);
+    }
+
+    .add-btn:hover{transform:scale(1.07);box-shadow:0 6px 22px rgba(0,212,170,0.4);}
+    .add-btn:active{transform:scale(0.94);}
+
+    /* ======== EMOJI PICKER ======== */
+    .emoji-panel{
+      display:none;
+      flex-wrap:wrap;gap:6px;
+      padding:14px;
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:16px;
+      margin-top:10px;
+    }
+
+    .emoji-panel.open{display:flex;}
+
+    .ep-emoji{
+      font-size:22px;cursor:pointer;
+      padding:6px;border-radius:8px;
+      border:none;background:none;
+      transition:background 0.15s;
+    }
+
+    .ep-emoji:hover{background:rgba(255,255,255,0.08);}
+
+    /* ======== WEEK STRIP ======== */
+    .week-label{
+      font-size:11px;font-weight:600;
+      letter-spacing:2.5px;text-transform:uppercase;
+      color:var(--muted);margin-bottom:12px;
+    }
+
+    .week-strip{
+      display:flex;gap:6px;margin-bottom:28px;
+    }
+
+    .day-pill{
+      flex:1;display:flex;flex-direction:column;
+      align-items:center;gap:6px;
+      padding:10px 4px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      font-size:11px;color:var(--muted);font-weight:500;
+      transition:all 0.2s;
+    }
+
+    .day-pill .day-num{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:15px;font-weight:700;color:var(--text);
+    }
+
+    .day-pill.today{
+      border-color:rgba(0,212,170,0.4);
+      background:rgba(0,212,170,0.07);
+    }
+
+    .day-pill.today .day-name{color:var(--accent);}
+
+    .day-dot{
+      width:7px;height:7px;border-radius:50%;
+      background:rgba(255,255,255,0.1);
+    }
+
+    .day-dot.filled{background:var(--accent);}
+
+    /* ======== HABIT CARDS ======== */
+    .section-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:17px;font-weight:700;
+      margin-bottom:14px;
+      display:flex;align-items:center;gap:8px;
+    }
+
+    .habits-list{
+      display:flex;flex-direction:column;gap:12px;
+    }
+
+    .habit-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:18px 20px;
+      display:flex;align-items:center;gap:16px;
+      transition:all 0.22s;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .habit-card::before{
+      content:'';
+      position:absolute;left:0;top:0;bottom:0;
+      width:3px;
+      border-radius:3px 0 0 3px;
+      background:var(--habit-color, var(--accent));
+    }
+
+    .habit-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 36px rgba(0,0,0,0.3);
+      border-color:rgba(255,255,255,0.13);
+    }
+
+    /* Completed state */
+    .habit-card.done{
+      opacity:0.55;
+    }
+
+    .habit-card.done .habit-name{
+      text-decoration:line-through;color:var(--muted);
+    }
+
+    /* Check circle */
+    .check-ring{
+      width:44px;height:44px;flex-shrink:0;
+      cursor:pointer;position:relative;
+    }
+
+    .check-ring svg{
+      width:100%;height:100%;
+      transform:rotate(-90deg);
+    }
+
+    .ring-bg{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:3;}
+    .ring-prog{
+      fill:none;stroke-width:3;stroke-linecap:round;
+      transition:stroke-dashoffset 0.5s ease, stroke 0.3s;
+    }
+
+    .check-icon{
+      position:absolute;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;
+    }
+
+    /* Habit info */
+    .habit-info{flex:1;min-width:0;}
+
+    .habit-name{
+      font-size:15px;font-weight:600;
+      margin-bottom:5px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+
+    .habit-meta{
+      display:flex;align-items:center;gap:10px;
+      font-size:12px;color:var(--muted);
+    }
+
+    .streak-badge{
+      display:flex;align-items:center;gap:4px;
+      padding:2px 9px;
+      border-radius:20px;
+      font-weight:600;font-size:11px;
+    }
+
+    /* Right side */
+    .habit-right{
+      display:flex;align-items:center;gap:8px;flex-shrink:0;
+    }
+
+    /* Mini week dots */
+    .mini-week{
+      display:flex;gap:3px;
+    }
+
+    .mini-dot{
+      width:6px;height:6px;border-radius:50%;
+      background:rgba(255,255,255,0.08);
+    }
+
+    .mini-dot.on{background:var(--habit-color,var(--accent));}
+
+    /* Delete button */
+    .del-btn{
+      width:30px;height:30px;border-radius:8px;
+      background:none;border:none;
+      color:var(--muted);font-size:13px;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.15s;
+    }
+
+    .del-btn:hover{
+      background:rgba(239,68,68,0.15);color:var(--red);
+    }
+
+    /* ======== EMPTY STATE ======== */
+    .empty{
+      text-align:center;padding:56px 20px;
+      background:var(--card);border:1px dashed var(--border);
+      border-radius:20px;
+    }
+
+    .empty .icon{font-size:48px;margin-bottom:14px;}
+
+    .empty h3{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;margin-bottom:8px;
+    }
+
+    .empty p{font-size:13px;color:var(--muted);}
+
+    /* ======== COMPLETION CONFETTI MSG ======== */
+    .all-done{
+      display:none;text-align:center;
+      padding:20px;
+      background:linear-gradient(135deg,rgba(0,212,170,0.08),rgba(124,58,237,0.08));
+      border:1px solid rgba(0,212,170,0.2);
+      border-radius:16px;
+      margin-bottom:20px;
+      font-size:14px;color:var(--accent);font-weight:600;
+    }
+
+    .all-done.show{display:block;}
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-logo">🔥 HabitFlow</div>
+  <div class="nav-date" id="nav-date"></div>
+</nav>
+
+<div class="wrapper">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Build Better Habits<br/>
+      <span style="background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+        One Day at a Time
+      </span>
+    </h1>
+    <p>Track your daily habits and watch your streaks grow.</p>
+
+    <div class="stats-row">
+      <div class="stat-pill">
+        <div>
+          <div class="val" id="stat-total">0</div>
+          <div class="lbl">Habits</div>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <div>
+          <div class="val" id="stat-done">0</div>
+          <div class="lbl">Done Today</div>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <div>
+          <div class="val" id="stat-streak">0</div>
+          <div class="lbl">Best Streak 🔥</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL DONE MESSAGE -->
+  <div class="all-done" id="all-done">
+    🎉 Amazing! You completed all your habits today! Keep the streak alive!
+  </div>
+
+  <!-- WEEK STRIP -->
+  <div class="week-label">This Week</div>
+  <div class="week-strip" id="week-strip"></div>
+
+  <!-- ADD HABIT -->
+  <div class="add-section">
+    <div class="add-box">
+      <button class="emoji-pick" id="emoji-btn" onclick="toggleEmojiPanel()">🎯</button>
+      <input class="add-input" id="habit-input"
+             placeholder="Add a new habit..."
+             maxlength="40"/>
+      <div class="color-picks" id="color-picks"></div>
+      <button class="add-btn" onclick="addHabit()">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+
+    <!-- Emoji Panel -->
+    <div class="emoji-panel" id="emoji-panel"></div>
+  </div>
+
+  <!-- HABIT LIST -->
+  <div class="section-title">
+    <i class="fa-solid fa-list-check" style="color:var(--accent)"></i>
+    Today's Habits
+  </div>
+  <div class="habits-list" id="habits-list"></div>
+
+</div>
+
+<script>
+  // ========================
+  // CONFIG
+  // ========================
+  const EMOJIS = [
+    "🎯","💪","📚","🏃","💧","🧘","🛌","🥗","✍️","🎸",
+    "🖥️","🧹","☀️","🧠","🏋️","🐍","☕","🎨","📝","🌿"
+  ];
+
+  const COLORS = [
+    "#00d4aa","#7c3aed","#f59e0b","#ef4444",
+    "#3b82f6","#ec4899","#10b981","#f97316"
+  ];
+
+  const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  // ========================
+  // STATE
+  // ========================
+  let habits    = JSON.parse(localStorage.getItem('hf_habits') || '[]');
+  let chosenEmoji = "🎯";
+  let chosenColor = COLORS[0];
+  const TODAY   = todayKey();
+
+  // ========================
+  // HELPERS
+  // ========================
+  function todayKey() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function weekDays() {
+    const days = [];
+    const now  = new Date();
+    const dow  = now.getDay();                    // 0=Sun
+    const mon  = new Date(now);
+    mon.setDate(now.getDate() - dow);             // Start of week (Sun)
+    for(let i = 0; i < 7; i++) {
+      const d = new Date(mon);
+      d.setDate(mon.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  }
+
+  function save() {
+    localStorage.setItem('hf_habits', JSON.stringify(habits));
+  }
+
+  // ========================
+  // INIT UI ELEMENTS
+  // ========================
+  function initPage() {
+    // Nav date
+    document.getElementById('nav-date').textContent =
+      new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+    // Color dots
+    const cp = document.getElementById('color-picks');
+    cp.innerHTML = COLORS.map(c => `
+      <div class="color-dot${c===chosenColor?' chosen':''}"
+           style="background:${c}"
+           onclick="pickColor('${c}')"></div>
+    `).join('');
+
+    // Emoji panel
+    document.getElementById('emoji-panel').innerHTML =
+      EMOJIS.map(e => `
+        <button class="ep-emoji" onclick="pickEmoji('${e}')">${e}</button>
+      `).join('');
+
+    // Week strip
+    buildWeekStrip();
+
+    // Habits
+    renderHabits();
+  }
+
+  // ========================
+  // WEEK STRIP
+  // ========================
+  function buildWeekStrip() {
+    const days = weekDays();
+    const today = new Date();
+    const strip = document.getElementById('week-strip');
+
+    strip.innerHTML = days.map(d => {
+      const isToday =
+        d.toDateString() === today.toDateString();
+
+      // Count how many habits were done on this day
+      const dKey = d.toISOString().split('T')[0];
+      const doneCount = habits.filter(h =>
+        h.completedDates && h.completedDates.includes(dKey)
+      ).length;
+      const filled = habits.length > 0 && doneCount > 0;
+
+      return `
+        <div class="day-pill${isToday?' today':''}">
+          <div class="day-name">${DAYS[d.getDay()]}</div>
+          <div class="day-num">${d.getDate()}</div>
+          <div class="day-dot${filled?' filled':''}"></div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ========================
+  // EMOJI & COLOR PICKERS
+  // ========================
+  function toggleEmojiPanel() {
+    document.getElementById('emoji-panel').classList.toggle('open');
+  }
+
+  function pickEmoji(e) {
+    chosenEmoji = e;
+    document.getElementById('emoji-btn').textContent = e;
+    document.getElementById('emoji-panel').classList.remove('open');
+  }
+
+  function pickColor(c) {
+    chosenColor = c;
+    document.querySelectorAll('.color-dot').forEach(d => {
+      d.classList.toggle('chosen',
+        d.style.background === c || d.style.backgroundColor === c
+      );
+    });
+  }
+
+  // ========================
+  // ADD HABIT
+  // ========================
+  function addHabit() {
+    const input = document.getElementById('habit-input');
+    const name  = input.value.trim();
+    if (!name) return;
+
+    const habit = {
+      id:             Date.now(),
+      name:           name,
+      emoji:          chosenEmoji,
+      color:          chosenColor,
+      createdAt:      TODAY,
+      completedDates: [],   // Array of "YYYY-MM-DD" strings
+      streak:         0,
+      bestStreak:     0
+    };
+
+    habits.unshift(habit);
+    save();
+    input.value = '';
+    renderHabits();
+    buildWeekStrip();
+  }
+
+  // ========================
+  // TOGGLE COMPLETION
+  // ========================
+  function toggleHabit(id) {
+    const habit = habits.find(h => h.id === id);
+    if (!habit) return;
+
+    const idx = habit.completedDates.indexOf(TODAY);
+
+    if (idx > -1) {
+      // Un-complete
+      habit.completedDates.splice(idx, 1);
+      recalcStreak(habit);
+    } else {
+      // Complete
+      habit.completedDates.push(TODAY);
+      recalcStreak(habit);
+    }
+
+    save();
+    renderHabits();
+    buildWeekStrip();
+  }
+
+  // Recalculate streak from completed dates
+  function recalcStreak(habit) {
+    let streak = 0;
+    const d = new Date();
+
+    while (true) {
+      const key = d.toISOString().split('T')[0];
+      if (habit.completedDates.includes(key)) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    habit.streak = streak;
+    if (streak > habit.bestStreak) habit.bestStreak = streak;
+  }
+
+  // ========================
+  // DELETE HABIT
+  // ========================
+  function deleteHabit(id) {
+    habits = habits.filter(h => h.id !== id);
+    save();
+    renderHabits();
+    buildWeekStrip();
+  }
+
+  // ========================
+  // RENDER HABITS
+  // ========================
+  function renderHabits() {
+    const list = document.getElementById('habits-list');
+
+    updateStats();
+
+    if (habits.length === 0) {
+      list.innerHTML = `
+        <div class="empty">
+          <div class="icon">🌱</div>
+          <h3>No habits yet</h3>
+          <p>Add your first habit above and start building your streak!</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Build week keys for mini dots
+    const wdays = weekDays().map(d => d.toISOString().split('T')[0]);
+
+    list.innerHTML = habits.map(habit => {
+      const isDone = habit.completedDates.includes(TODAY);
+
+      // Ring progress (streak / 7 for weekly goal)
+      const r = 18;
+      const circ = 2 * Math.PI * r;
+      const prog = Math.min(habit.streak / 7, 1);
+      const offset = circ * (1 - prog);
+
+      // Streak badge color
+      let badgeBg = 'rgba(255,255,255,0.07)';
+      let badgeColor = '#888';
+      if (habit.streak >= 7)  { badgeBg='rgba(245,158,11,0.15)'; badgeColor='#f59e0b'; }
+      else if (habit.streak >= 3) { badgeBg='rgba(0,212,170,0.12)'; badgeColor='#00d4aa'; }
+      else if (habit.streak >= 1) { badgeBg='rgba(124,58,237,0.12)'; badgeColor='#a78bfa'; }
+
+      // Mini week dots
+      const miniDots = wdays.map(dk => `
+        <div class="mini-dot${habit.completedDates.includes(dk)?' on':''}"></div>
+      `).join('');
+
+      return `
+        <div class="habit-card${isDone?' done':''}"
+             style="--habit-color:${habit.color}">
+
+          <!-- Ring check button -->
+          <div class="check-ring" onclick="toggleHabit(${habit.id})">
+            <svg viewBox="0 0 44 44">
+              <circle class="ring-bg" cx="22" cy="22" r="${r}"/>
+              <circle class="ring-prog"
+                cx="22" cy="22" r="${r}"
+                stroke="${habit.color}"
+                stroke-dasharray="${circ}"
+                stroke-dashoffset="${offset}"/>
+            </svg>
+            <div class="check-icon">
+              ${isDone
+                ? `<i class="fa-solid fa-check" style="color:${habit.color}"></i>`
+                : `<span style="font-size:19px">${habit.emoji}</span>`
+              }
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="habit-info">
+            <div class="habit-name">${habit.emoji} ${habit.name}</div>
+            <div class="habit-meta">
+              <span class="streak-badge"
+                    style="background:${badgeBg};color:${badgeColor}">
+                🔥 ${habit.streak} day streak
+              </span>
+              <div class="mini-week">${miniDots}</div>
+            </div>
+          </div>
+
+          <!-- Delete -->
+          <div class="habit-right">
+            <button class="del-btn" onclick="deleteHabit(${habit.id})">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ========================
+  // UPDATE STATS
+  // ========================
+  function u
